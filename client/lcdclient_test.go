@@ -7,7 +7,6 @@ import (
 
 	"github.com/terra-project/terra.go/key"
 	"github.com/terra-project/terra.go/msg"
-	"github.com/terra-project/terra.go/tx"
 )
 
 func Test_Transaction(t *testing.T) {
@@ -34,10 +33,6 @@ func Test_Transaction(t *testing.T) {
 		Msgs: []msg.Msg{
 			msg.NewSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
 			msg.NewSwapSend(addr, toAddr, msg.NewInt64Coin("uusd", 1000000), "ukrw"),
-		},
-		Fee: tx.StdFee{
-			Gas:    msg.NewInt(0),
-			Amount: msg.NewCoins(),
 		},
 		Memo: "",
 	})
