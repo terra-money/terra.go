@@ -34,15 +34,14 @@ tx, err := LCDClient.CreateAndSignTx(CreateTxOptions{
     },
     Memo:          "",
 
-    // Optional Paramters (if empty, load chain info)
-    AccountNumber: msg.NewInt(33),
-    Sequence:      msg.NewInt(1),
-
-    // Optional Paramters (if empty, simulate gas & fee)
-    Fee: tx.StdFee{
-        Gas:    msg.NewInt(0),
-        Amount: msg.NewCoins(),
-    },
+    // Options Paramters (if empty, load chain info)
+    // AccountNumber: msg.NewInt(33),
+    // Sequence:      msg.NewInt(1),
+    // Options Paramters (if empty, simulate gas & fee)
+    // Fee: tx.StdFee{
+    //     Gas:    msg.NewInt(0),
+    //     Amount: msg.NewCoins(),
+    // },
 })
 assert.NoError(t, err)
 
