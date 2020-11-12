@@ -35,8 +35,6 @@ func (LCDClient LCDClient) Broadcast(stdTx tx.StdTx) (TxResponse, error) {
 	}
 
 	reqBytes, err := json.Marshal(broadcastReq)
-	fmt.Println(string(reqBytes))
-
 	if err != nil {
 		return TxResponse{}, sdkerrors.Wrap(err, "failed to marshal")
 	}
@@ -51,10 +49,18 @@ func (LCDClient LCDClient) Broadcast(stdTx tx.StdTx) (TxResponse, error) {
 		return TxResponse{}, sdkerrors.Wrap(err, "failed to read response")
 	}
 
+	if resp.StatusCode != 200 {
+		return TxResponse{}, fmt.Errorf("non 200 respose code %d, error: %s", resp.StatusCode, string(out))
+	}
+
 	var txResponse TxResponse
 	err = json.Unmarshal(out, &txResponse)
 	if err != nil {
 		return TxResponse{}, sdkerrors.Wrap(err, "failed to unmarshal response")
+	}
+
+	if txResponse.Code != 0 {
+		return txResponse, fmt.Errorf("Tx failed code %d, error: %s", txResponse.Code, txResponse.RawLog)
 	}
 
 	return txResponse, nil

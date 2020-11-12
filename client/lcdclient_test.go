@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,18 +33,17 @@ func Test_Transaction(t *testing.T) {
 	tx, err := LCDClient.CreateAndSignTx(CreateTxOptions{
 		Msgs: []msg.Msg{
 			msg.NewSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
+			msg.NewSwapSend(addr, toAddr, msg.NewInt64Coin("uusd", 1000000), "ukrw"),
 		},
 		Fee: tx.StdFee{
 			Gas:    msg.NewInt(0),
 			Amount: msg.NewCoins(),
 		},
-		Memo:          "",
-		AccountNumber: msg.NewInt(33),
-		Sequence:      msg.NewInt(1),
+		Memo: "",
 	})
 	assert.NoError(t, err)
 
 	res, err := LCDClient.Broadcast(tx)
 	assert.NoError(t, err)
-	fmt.Println(res)
+	assert.Equal(t, res.Code, uint32(0))
 }

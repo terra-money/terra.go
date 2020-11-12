@@ -32,13 +32,16 @@ tx, err := LCDClient.CreateAndSignTx(CreateTxOptions{
     Msgs: []msg.Msg{
         msg.NewSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
     },
+    Memo:          "",
+
+    // Options Paramters (if empty, load chain info)
+    AccountNumber: msg.NewInt(33),
+    Sequence:      msg.NewInt(1),
+    // Options Paramters (if empty, simulate gas & fee)
     Fee: tx.StdFee{
         Gas:    msg.NewInt(0),
         Amount: msg.NewCoins(),
     },
-    Memo:          "",
-    AccountNumber: msg.NewInt(33),
-    Sequence:      msg.NewInt(1),
 })
 assert.NoError(t, err)
 

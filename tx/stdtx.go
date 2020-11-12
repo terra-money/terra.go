@@ -20,7 +20,7 @@ type StdFee struct {
 
 // IsEmpty return empty or not
 func (stdFee StdFee) IsEmpty() bool {
-	return stdFee.Gas.IsZero() && stdFee.Amount.Empty()
+	return ((msg.Int{}) == stdFee.Gas || stdFee.Gas.IsZero()) && stdFee.Amount.Empty()
 }
 
 // StdPubKey - tendermint style pubkey

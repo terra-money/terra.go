@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/terra-project/terra.go/key"
 	"github.com/terra-project/terra.go/msg"
 	"github.com/terra-project/terra.go/tx"
@@ -34,11 +32,12 @@ func NewLCDClient(URL, chainID string, gasPrice msg.DecCoin, gasAdjustment msg.D
 // CreateTxOptions tx creation options
 type CreateTxOptions struct {
 	Msgs []msg.Msg
-	Fee  tx.StdFee
 	Memo string
 
+	// Optional parameters
 	AccountNumber msg.Int
 	Sequence      msg.Int
+	Fee           tx.StdFee
 }
 
 // CreateAndSignTx build and sign tx
@@ -54,7 +53,17 @@ func (lcdClient LCDClient) CreateAndSignTx(options CreateTxOptions) (tx.StdTx, e
 		stdTx.Value.Fee.Gas = fee.Gas
 	}
 
-	fmt.Println(stdTx)
+	if (msg.Int{}) == options.AccountNumber ||
+		(msg.Int{}) == options.Sequence ||
+		options.AccountNumber.IsZero() {
+		account, err := lcdClient.LoadAccount(msg.AccAddress(lcdClient.TmKey.PubKey().Address()))
+		if err != nil {
+			return tx.StdTx{}, sdkerrors.Wrap(err, "failed to load account")
+		}
+
+		options.AccountNumber = account.AccountNumber
+		options.Sequence = account.Sequence
+	}
 
 	signature, err := stdTx.Sign(lcdClient.TmKey, lcdClient.ChainID, options.AccountNumber, options.Sequence)
 	if err != nil {
