@@ -2,12 +2,14 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"golang.org/x/net/context/ctxhttp"
+
 	"github.com/terra-project/terra.go/msg"
 	"github.com/terra-project/terra.go/tx"
 )
@@ -32,39 +34,40 @@ type EstimateFeeResWrapper struct {
 }
 
 // EstimateFee simulates gas and fee for a transaction
-func (lcdClient LCDClient) EstimateFee(stdTx tx.StdTx) (res EstimateFeeResp, err error) {
+func (lcd LCDClient) EstimateFee(ctx context.Context, stdTx tx.StdTx) (res *EstimateFeeResp, err error) {
 	broadcastReq := EstimateFeeReq{
 		Tx:            stdTx.Value,
-		GasAdjustment: lcdClient.GasAdjustment.String(),
-		GasPrices:     msg.DecCoins{lcdClient.GasPrice},
+		GasAdjustment: lcd.GasAdjustment.String(),
+		GasPrices:     msg.DecCoins{lcd.GasPrice},
 	}
 
 	reqBytes, err := json.Marshal(broadcastReq)
 	if err != nil {
-		return EstimateFeeResp{}, sdkerrors.Wrap(err, "failed to marshal")
+		return nil, sdkerrors.Wrap(err, "failed to marshal")
 	}
 
-	resp, err := http.Post(lcdClient.URL+"/txs/estimate_fee", "application/json", bytes.NewBuffer(reqBytes))
+	resp, err := ctxhttp.Post(ctx, lcd.c, lcd.URL+"/txs/estimate_fee", "application/json", bytes.NewBuffer(reqBytes))
 	if err != nil {
-		return EstimateFeeResp{}, sdkerrors.Wrap(err, "failed to estimate")
+		return nil, sdkerrors.Wrap(err, "failed to estimate")
 	}
+	defer resp.Body.Close()
 
 	out, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return EstimateFeeResp{}, sdkerrors.Wrap(err, "failed to read response")
+		return nil, sdkerrors.Wrap(err, "failed to read response")
 	}
 
 	if resp.StatusCode != 200 {
-		return EstimateFeeResp{}, fmt.Errorf("non 200 respose code %d, error: %s", resp.StatusCode, string(out))
+		return nil, fmt.Errorf("non 200 respose code %d, error: %s", resp.StatusCode, string(out))
 	}
 
 	var response EstimateFeeResWrapper
 	err = json.Unmarshal(out, &response)
 	if err != nil {
-		return EstimateFeeResp{}, sdkerrors.Wrap(err, "failed to unmarshal response")
+		return nil, sdkerrors.Wrap(err, "failed to unmarshal response")
 	}
 
-	return response.Result, nil
+	return &response.Result, nil
 }
 
 // QueryAccountResData response
@@ -88,26 +91,27 @@ type QueryAccountResWrapper struct {
 }
 
 // LoadAccount simulates gas and fee for a transaction
-func (lcdClient LCDClient) LoadAccount(address msg.AccAddress) (res QueryAccountResData, err error) {
-	resp, err := http.Get(lcdClient.URL + fmt.Sprintf("/auth/accounts/%s", address))
+func (lcd LCDClient) LoadAccount(ctx context.Context, address msg.AccAddress) (res *QueryAccountResData, err error) {
+	resp, err := ctxhttp.Get(ctx, lcd.c, lcd.URL+fmt.Sprintf("/auth/accounts/%s", address))
 	if err != nil {
-		return QueryAccountResData{}, sdkerrors.Wrap(err, "failed to estimate")
+		return nil, sdkerrors.Wrap(err, "failed to estimate")
 	}
+	defer resp.Body.Close()
 
 	out, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return QueryAccountResData{}, sdkerrors.Wrap(err, "failed to read response")
+		return nil, sdkerrors.Wrap(err, "failed to read response")
 	}
 
 	if resp.StatusCode != 200 {
-		return QueryAccountResData{}, fmt.Errorf("non 200 respose code %d, error: %s", resp.StatusCode, string(out))
+		return nil, fmt.Errorf("non-200 response code %d: %s", resp.StatusCode, string(out))
 	}
 
 	var response QueryAccountResWrapper
 	err = json.Unmarshal(out, &response)
 	if err != nil {
-		return QueryAccountResData{}, sdkerrors.Wrap(err, "failed to unmarshal response")
+		return nil, sdkerrors.Wrap(err, "failed to unmarshal response")
 	}
 
-	return response.Result.Value, nil
+	return &response.Result.Value, nil
 }
