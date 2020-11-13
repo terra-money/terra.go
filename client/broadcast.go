@@ -2,12 +2,13 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"golang.org/x/net/context/ctxhttp"
 
 	"github.com/terra-project/terra.go/msg"
 	"github.com/terra-project/terra.go/tx"
@@ -28,7 +29,7 @@ type TxResponse struct {
 }
 
 // Broadcast - no-lint
-func (LCDClient LCDClient) Broadcast(stdTx tx.StdTx) (TxResponse, error) {
+func (lcd LCDClient) Broadcast(ctx context.Context, stdTx *tx.StdTx) (*TxResponse, error) {
 	broadcastReq := BroadcastReq{
 		Tx:   stdTx.Value,
 		Mode: "sync",
@@ -36,32 +37,32 @@ func (LCDClient LCDClient) Broadcast(stdTx tx.StdTx) (TxResponse, error) {
 
 	reqBytes, err := json.Marshal(broadcastReq)
 	if err != nil {
-		return TxResponse{}, sdkerrors.Wrap(err, "failed to marshal")
+		return nil, sdkerrors.Wrap(err, "failed to marshal")
 	}
 
-	resp, err := http.Post(LCDClient.URL+"/txs", "application/json", bytes.NewBuffer(reqBytes))
+	resp, err := ctxhttp.Post(ctx, lcd.c, lcd.URL+"/txs", "application/json", bytes.NewBuffer(reqBytes))
 	if err != nil {
-		return TxResponse{}, sdkerrors.Wrap(err, "failed to broadcast")
+		return nil, sdkerrors.Wrap(err, "failed to broadcast")
 	}
 
 	out, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return TxResponse{}, sdkerrors.Wrap(err, "failed to read response")
+		return nil, sdkerrors.Wrap(err, "failed to read response")
 	}
 
 	if resp.StatusCode != 200 {
-		return TxResponse{}, fmt.Errorf("non 200 respose code %d, error: %s", resp.StatusCode, string(out))
+		return nil, fmt.Errorf("non-200 response code %d: %s", resp.StatusCode, string(out))
 	}
 
 	var txResponse TxResponse
 	err = json.Unmarshal(out, &txResponse)
 	if err != nil {
-		return TxResponse{}, sdkerrors.Wrap(err, "failed to unmarshal response")
+		return nil, sdkerrors.Wrap(err, "failed to unmarshal response")
 	}
 
 	if txResponse.Code != 0 {
-		return txResponse, fmt.Errorf("Tx failed code %d, error: %s", txResponse.Code, txResponse.RawLog)
+		return &txResponse, fmt.Errorf("tx failed with code %d: %s", txResponse.Code, txResponse.RawLog)
 	}
 
-	return txResponse, nil
+	return &txResponse, nil
 }

@@ -1,7 +1,9 @@
 package client
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -27,18 +29,21 @@ func Test_Transaction(t *testing.T) {
 		"testnet",
 		msg.NewDecCoinFromDec("uusd", msg.NewDecFromIntWithPrec(msg.NewInt(15), 2)), // 0.15uusd
 		msg.NewDecFromIntWithPrec(msg.NewInt(15), 1), tmKey,
+		10*time.Second,
 	)
 
-	tx, err := LCDClient.CreateAndSignTx(CreateTxOptions{
-		Msgs: []msg.Msg{
-			msg.NewSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
-			msg.NewSwapSend(addr, toAddr, msg.NewInt64Coin("uusd", 1000000), "ukrw"),
-		},
-		Memo: "",
-	})
+	tx, err := LCDClient.CreateAndSignTx(
+		context.Background(),
+		CreateTxOptions{
+			Msgs: []msg.Msg{
+				msg.NewSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
+				msg.NewSwapSend(addr, toAddr, msg.NewInt64Coin("uusd", 1000000), "ukrw"),
+			},
+			Memo: "",
+		})
 	assert.NoError(t, err)
 
-	res, err := LCDClient.Broadcast(tx)
+	res, err := LCDClient.Broadcast(context.Background(), tx)
 	assert.NoError(t, err)
 	assert.Equal(t, res.Code, uint32(0))
 }
