@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/terra-project/terra.go/key"
 	"github.com/terra-project/terra.go/msg"
 
