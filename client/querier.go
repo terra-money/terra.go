@@ -58,7 +58,7 @@ func (lcd LCDClient) EstimateFee(ctx context.Context, stdTx tx.StdTx) (res *Esti
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("non 200 respose code %d, error: %s", resp.StatusCode, string(out))
+		return nil, fmt.Errorf("non-200 response code %d: %s", resp.StatusCode, string(out))
 	}
 
 	var response EstimateFeeResWrapper
