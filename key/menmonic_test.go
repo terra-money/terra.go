@@ -16,6 +16,6 @@ func Test_DrivePrivKey(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Only Secp256k1 is supported
-	_, err = DerivePrivKey(mnemonic, CreateHDPath(1, 1))
+	_, err = DerivePrivKeyBz(mnemonic, CreateHDPath(1, 1))
 	assert.NoError(t, err)
 }

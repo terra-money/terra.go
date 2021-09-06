@@ -10,29 +10,22 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"golang.org/x/net/context/ctxhttp"
 
-	"github.com/terra-project/terra.go/msg"
 	"github.com/terra-project/terra.go/tx"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// BroadcastReq broadcast request body
-type BroadcastReq struct {
-	Tx   tx.StdTxData `json:"tx"`
-	Mode string       `json:"mode"`
-}
-
-// TxResponse response
-type TxResponse struct {
-	Height msg.Int `json:"height"`
-	TxHash string  `json:"txhash"`
-	Code   uint32  `json:"code,omitempty"`
-	RawLog string  `json:"raw_log,omitempty"`
-}
-
 // Broadcast - no-lint
-func (lcd LCDClient) Broadcast(ctx context.Context, stdTx *tx.StdTx) (*TxResponse, error) {
-	broadcastReq := BroadcastReq{
-		Tx:   stdTx.Value,
-		Mode: "sync",
+func (lcd LCDClient) Broadcast(ctx context.Context, txbuilder *tx.Builder) (*sdk.TxResponse, error) {
+	txBytes, err := txbuilder.GetTxBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	broadcastReq := txtypes.BroadcastTxRequest{
+		TxBytes: txBytes,
+		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
 	}
 
 	reqBytes, err := json.Marshal(broadcastReq)
@@ -40,7 +33,7 @@ func (lcd LCDClient) Broadcast(ctx context.Context, stdTx *tx.StdTx) (*TxRespons
 		return nil, sdkerrors.Wrap(err, "failed to marshal")
 	}
 
-	resp, err := ctxhttp.Post(ctx, lcd.c, lcd.URL+"/txs", "application/json", bytes.NewBuffer(reqBytes))
+	resp, err := ctxhttp.Post(ctx, lcd.c, lcd.URL+"/cosmos/tx/v1beta1/txs", "application/json", bytes.NewBuffer(reqBytes))
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to broadcast")
 	}
@@ -54,15 +47,16 @@ func (lcd LCDClient) Broadcast(ctx context.Context, stdTx *tx.StdTx) (*TxRespons
 		return nil, fmt.Errorf("non-200 response code %d: %s", resp.StatusCode, string(out))
 	}
 
-	var txResponse TxResponse
-	err = json.Unmarshal(out, &txResponse)
+	var broadcastTxResponse txtypes.BroadcastTxResponse
+	err = lcd.EncodingConfig.Marshaler.UnmarshalJSON(out, &broadcastTxResponse)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal response")
 	}
 
+	txResponse := broadcastTxResponse.TxResponse
 	if txResponse.Code != 0 {
-		return &txResponse, fmt.Errorf("tx failed with code %d: %s", txResponse.Code, txResponse.RawLog)
+		return txResponse, fmt.Errorf("tx failed with code %d: %s", txResponse.Code, txResponse.RawLog)
 	}
 
-	return &txResponse, nil
+	return txResponse, nil
 }

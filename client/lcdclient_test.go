@@ -9,16 +9,17 @@ import (
 
 	"github.com/terra-project/terra.go/key"
 	"github.com/terra-project/terra.go/msg"
+	"github.com/terra-project/terra.go/tx"
 )
 
 func Test_Transaction(t *testing.T) {
 	mnemonic := "essence gallery exit illegal nasty luxury sport trouble measure benefit busy almost bulb fat shed today produce glide meadow require impact fruit omit weasel"
-	privKey, err := key.DerivePrivKey(mnemonic, key.CreateHDPath(0, 0))
+	privKeyBz, err := key.DerivePrivKeyBz(mnemonic, key.CreateHDPath(0, 0))
 	assert.NoError(t, err)
-	tmKey, err := key.StdPrivKeyGen(privKey)
+	privKey, err := key.PrivKeyGen(privKeyBz)
 	assert.NoError(t, err)
 
-	addr := msg.AccAddress(tmKey.PubKey().Address())
+	addr := msg.AccAddress(privKey.PubKey().Address())
 	assert.Equal(t, addr.String(), "terra1cevwjzwft3pjuf5nc32d9kyrvh5y7fp9havw7k")
 
 	toAddr, err := msg.AccAddressFromBech32("terra1t849fxw7e8ney35mxemh4h3ayea4zf77dslwna")
@@ -28,7 +29,7 @@ func Test_Transaction(t *testing.T) {
 		"http://127.0.0.1:1317",
 		"testnet",
 		msg.NewDecCoinFromDec("uusd", msg.NewDecFromIntWithPrec(msg.NewInt(15), 2)), // 0.15uusd
-		msg.NewDecFromIntWithPrec(msg.NewInt(15), 1), tmKey,
+		msg.NewDecFromIntWithPrec(msg.NewInt(15), 1), privKey,
 		10*time.Second,
 	)
 
@@ -36,10 +37,11 @@ func Test_Transaction(t *testing.T) {
 		context.Background(),
 		CreateTxOptions{
 			Msgs: []msg.Msg{
-				msg.NewSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
-				msg.NewSwapSend(addr, toAddr, msg.NewInt64Coin("uusd", 1000000), "ukrw"),
+				msg.NewMsgSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
+				msg.NewMsgSwapSend(addr, toAddr, msg.NewInt64Coin("uusd", 1000000), "ukrw"),
 			},
-			Memo: "",
+			Memo:     "",
+			SignMode: tx.SignModeDirect,
 		})
 	assert.NoError(t, err)
 

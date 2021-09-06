@@ -3,45 +3,46 @@ package client
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"golang.org/x/net/context/ctxhttp"
 
 	"github.com/terra-project/terra.go/msg"
-	"github.com/terra-project/terra.go/tx"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	feeutils "github.com/terra-money/core/custom/auth/client/utils"
 )
-
-// EstimateFeeReq request
-type EstimateFeeReq struct {
-	Tx            tx.StdTxData `json:"tx"`
-	GasAdjustment string       `json:"gas_adjustment"`
-	GasPrices     msg.DecCoins `json:"gas_prices"`
-}
-
-// EstimateFeeResp response
-type EstimateFeeResp struct {
-	Fees msg.Coins `json:"fees"`
-	Gas  msg.Int   `json:"gas"`
-}
 
 // EstimateFeeResWrapper - wrapper for estimate fee query
 type EstimateFeeResWrapper struct {
-	Height msg.Int         `json:"height"`
-	Result EstimateFeeResp `json:"result"`
+	Height msg.Int                  `json:"height"`
+	Result feeutils.EstimateFeeResp `json:"result"`
 }
 
 // EstimateFee simulates gas and fee for a transaction
-func (lcd LCDClient) EstimateFee(ctx context.Context, stdTx tx.StdTx) (res *EstimateFeeResp, err error) {
-	broadcastReq := EstimateFeeReq{
-		Tx:            stdTx.Value,
-		GasAdjustment: lcd.GasAdjustment.String(),
-		GasPrices:     msg.DecCoins{lcd.GasPrice},
+func (lcd LCDClient) EstimateFee(ctx context.Context, options CreateTxOptions) (res *feeutils.EstimateFeeResp, err error) {
+
+	estimateReq := feeutils.EstimateFeeReq{
+		BaseReq: rest.BaseReq{
+			From:          msg.AccAddress(lcd.PrivKey.PubKey().Address()).String(),
+			Memo:          options.Memo,
+			ChainID:       lcd.ChainID,
+			AccountNumber: options.AccountNumber,
+			Sequence:      options.Sequence,
+			TimeoutHeight: options.TimeoutHeight,
+			Fees:          options.FeeAmount,
+			GasPrices:     msg.NewDecCoins(lcd.GasPrice),
+			Gas:           "auto",
+			GasAdjustment: lcd.GasAdjustment.String(),
+		},
+		Msgs: options.Msgs,
 	}
 
-	reqBytes, err := json.Marshal(broadcastReq)
+	reqBytes, err := lcd.EncodingConfig.Amino.MarshalJSON(estimateReq)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to marshal")
 	}
@@ -62,7 +63,7 @@ func (lcd LCDClient) EstimateFee(ctx context.Context, stdTx tx.StdTx) (res *Esti
 	}
 
 	var response EstimateFeeResWrapper
-	err = json.Unmarshal(out, &response)
+	err = lcd.EncodingConfig.Amino.UnmarshalJSON(out, &response)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal response")
 	}
@@ -73,26 +74,18 @@ func (lcd LCDClient) EstimateFee(ctx context.Context, stdTx tx.StdTx) (res *Esti
 // QueryAccountResData response
 type QueryAccountResData struct {
 	Address       msg.AccAddress `json:"address"`
-	Coins         msg.Coins      `json:"coins"`
 	AccountNumber msg.Int        `json:"account_number"`
 	Sequence      msg.Int        `json:"sequence"`
 }
 
 // QueryAccountRes response
 type QueryAccountRes struct {
-	Type  string              `json:"type"`
-	Value QueryAccountResData `json:"value"`
-}
-
-// QueryAccountResWrapper - wrapper for estimate fee query
-type QueryAccountResWrapper struct {
-	Height msg.Int         `json:"height"`
-	Result QueryAccountRes `json:"result"`
+	Account QueryAccountResData `json:"account"`
 }
 
 // LoadAccount simulates gas and fee for a transaction
-func (lcd LCDClient) LoadAccount(ctx context.Context, address msg.AccAddress) (res *QueryAccountResData, err error) {
-	resp, err := ctxhttp.Get(ctx, lcd.c, lcd.URL+fmt.Sprintf("/auth/accounts/%s", address))
+func (lcd LCDClient) LoadAccount(ctx context.Context, address msg.AccAddress) (res authtypes.AccountI, err error) {
+	resp, err := ctxhttp.Get(ctx, lcd.c, lcd.URL+fmt.Sprintf("/cosmos/auth/v1beta1/accounts/%s", address))
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to estimate")
 	}
@@ -107,11 +100,11 @@ func (lcd LCDClient) LoadAccount(ctx context.Context, address msg.AccAddress) (r
 		return nil, fmt.Errorf("non-200 response code %d: %s", resp.StatusCode, string(out))
 	}
 
-	var response QueryAccountResWrapper
-	err = json.Unmarshal(out, &response)
+	var response authtypes.QueryAccountResponse
+	err = lcd.EncodingConfig.Marshaler.UnmarshalJSON(out, &response)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal response")
 	}
 
-	return &response.Result.Value, nil
+	return response.Account.GetCachedValue().(authtypes.AccountI), nil
 }
