@@ -67,14 +67,9 @@ func (lcd *LCDClient) CreateAndSignTx(ctx context.Context, options CreateTxOptio
 	txbuilder.SetMsgs(options.Msgs...)
 	txbuilder.SetTimeoutHeight(options.TimeoutHeight)
 
-	if options.FeeAmount.IsZero() || options.GasLimit == 0 {
-		res, err := lcd.EstimateFee(ctx, options)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "failed to estimate fee")
-		}
-
-		txbuilder.SetFeeAmount(res.Fee.Amount)
-		txbuilder.SetGasLimit(res.Fee.Gas)
+	// use direct sign mode as default
+	if tx.SignModeUnspecified == options.SignMode {
+		options.SignMode = tx.SignModeDirect
 	}
 
 	if options.AccountNumber == 0 || options.Sequence == 0 {
@@ -87,9 +82,25 @@ func (lcd *LCDClient) CreateAndSignTx(ctx context.Context, options CreateTxOptio
 		options.Sequence = account.GetSequence()
 	}
 
-	// use direct sign mode as default
-	if tx.SignModeUnspecified == options.SignMode {
-		options.SignMode = tx.SignModeDirect
+	gasLimit := int64(options.GasLimit)
+	if options.GasLimit == 0 {
+		simulateRes, err := lcd.Simulate(ctx, txbuilder, options)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "failed to simulate")
+		}
+
+		gasLimit = lcd.GasAdjustment.MulInt64(int64(simulateRes.GasInfo.GasUsed)).TruncateInt64()
+		txbuilder.SetGasLimit(uint64(gasLimit))
+	}
+
+	if options.FeeAmount.IsZero() {
+		computeTaxRes, err := lcd.ComputeTax(ctx, txbuilder)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "failed to compute tax")
+		}
+
+		gasFee := msg.NewCoin(lcd.GasPrice.Denom, lcd.GasPrice.Amount.MulInt64(gasLimit).TruncateInt())
+		txbuilder.SetFeeAmount(computeTaxRes.TaxAmount.Add(gasFee))
 	}
 
 	err := txbuilder.Sign(options.SignMode, tx.SignerData{
