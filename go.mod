@@ -1,4 +1,4 @@
-module github.com/terra-project/terra.go
+module github.com/terra-money/terra.go
 
 go 1.16
 
