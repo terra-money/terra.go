@@ -10,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"golang.org/x/net/context/ctxhttp"
 
-	"github.com/terra-project/terra.go/tx"
+	"github.com/terra-money/terra.go/tx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
