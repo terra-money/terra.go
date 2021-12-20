@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/net/context/ctxhttp"
 
-	"github.com/terra-project/terra.go/msg"
-	"github.com/terra-project/terra.go/tx"
+	"github.com/terra-money/terra.go/msg"
+	"github.com/terra-money/terra.go/tx"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
