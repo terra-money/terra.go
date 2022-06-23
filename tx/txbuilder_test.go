@@ -10,7 +10,7 @@ import (
 	"github.com/terra-money/terra.go/key"
 	"github.com/terra-money/terra.go/msg"
 
-	terraapp "github.com/terra-money/core/app"
+	terraapp "github.com/terra-money/core/v2/app"
 )
 
 func Test_Sign(t *testing.T) {

@@ -11,8 +11,8 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	terraapp "github.com/terra-money/core/app"
-	terraappparams "github.com/terra-money/core/app/params"
+	terraapp "github.com/terra-money/core/v2/app"
+	terraappparams "github.com/terra-money/core/v2/app/params"
 )
 
 // LCDClient outer interface for building & signing & broadcasting tx
