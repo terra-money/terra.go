@@ -89,12 +89,12 @@ func (lcd *LCDClient) CreateAndSignTx(ctx context.Context, options CreateTxOptio
 			return nil, sdkerrors.Wrap(err, "failed to simulate")
 		}
 
-		gasLimit = lcd.GasAdjustment.MulInt64(int64(simulateRes.GasInfo.GasUsed)).TruncateInt64()
+		gasLimit = lcd.GasAdjustment.MulInt64(int64(simulateRes.GasInfo.GasUsed)).Ceil().RoundInt64()
 		txbuilder.SetGasLimit(uint64(gasLimit))
 	}
 
 	if options.FeeAmount.IsZero() {
-		gasFee := msg.NewCoin(lcd.GasPrice.Denom, lcd.GasPrice.Amount.MulInt64(gasLimit).TruncateInt())
+		gasFee := msg.NewCoin(lcd.GasPrice.Denom, lcd.GasPrice.Amount.MulInt64(gasLimit).Ceil().RoundInt())
 		txbuilder.SetFeeAmount(msg.NewCoins(gasFee))
 	}
 
