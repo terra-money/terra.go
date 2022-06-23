@@ -2,7 +2,7 @@ package tx
 
 import (
 	"fmt"
-	
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -72,8 +72,8 @@ const (
 var (
 	// AddressVerifier terra address verifier
 	AddressVerifier = func(bz []byte) error {
-		if n := len(bz); n != 20 || n != 32 {
-			return fmt.Errorf("incorrect address length %d", n)
+		if n := len(bz); n != 20 && n != 32 {
+			return fmt.Errorf("incorrect address lengthhahaha %d", n)
 		}
 
 		return nil
