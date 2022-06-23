@@ -94,13 +94,8 @@ func (lcd *LCDClient) CreateAndSignTx(ctx context.Context, options CreateTxOptio
 	}
 
 	if options.FeeAmount.IsZero() {
-		computeTaxRes, err := lcd.ComputeTax(ctx, txbuilder)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "failed to compute tax")
-		}
-
 		gasFee := msg.NewCoin(lcd.GasPrice.Denom, lcd.GasPrice.Amount.MulInt64(gasLimit).TruncateInt())
-		txbuilder.SetFeeAmount(computeTaxRes.TaxAmount.Add(gasFee))
+		txbuilder.SetFeeAmount(msg.NewCoins(gasFee))
 	}
 
 	err := txbuilder.Sign(options.SignMode, tx.SignerData{
