@@ -3,8 +3,7 @@ package msg
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	markettypes "github.com/terra-money/core/x/market/types"
-	wasmtypes "github.com/terra-money/core/x/wasm/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 type (
@@ -17,17 +16,8 @@ type (
 	// MultiSend bank multi-send msg
 	MultiSend = banktypes.MsgMultiSend
 
-	// Swap market swap msg
-	Swap = markettypes.MsgSwap
-
-	// SwapSend market swap_send msg
-	SwapSend = markettypes.MsgSwapSend
-
 	// StoreCode wasm store_code msg
 	StoreCode = wasmtypes.MsgStoreCode
-
-	// MigrateCode wasm code migration msg
-	MigrateCode = wasmtypes.MsgMigrateCode
 
 	// InstantiateContract wasm contract initiation msg
 	InstantiateContract = wasmtypes.MsgInstantiateContract
@@ -37,6 +27,9 @@ type (
 
 	// MigrateContract wasm contract migration msg
 	MigrateContract = wasmtypes.MsgMigrateContract
+
+	// AccessConfig wasm contract access config
+	AccessConfig = wasmtypes.AccessConfig
 
 	// Coin nolint
 	Coin = sdk.Coin
@@ -64,13 +57,6 @@ type (
 var (
 	NewMsgSend                = banktypes.NewMsgSend
 	NewMsgMultiSend           = banktypes.NewMsgMultiSend
-	NewMsgSwap                = markettypes.NewMsgSwap
-	NewMsgSwapSend            = markettypes.NewMsgSwapSend
-	NewMsgStoreCode           = wasmtypes.NewMsgStoreCode
-	NewMsgMigrateCode         = wasmtypes.NewMsgMigrateCode
-	NewMsgInstantiateContract = wasmtypes.NewMsgInstantiateContract
-	NewMsgExecuteContract     = wasmtypes.NewMsgExecuteContract
-	NewMsgMigrateContract     = wasmtypes.NewMsgMigrateContract
 
 	NewCoin         = sdk.NewCoin
 	NewInt64Coin    = sdk.NewInt64Coin
