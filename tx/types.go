@@ -47,4 +47,33 @@ const (
 	// SignModeLegacyAminoJSON is a backwards compatibility mode which uses
 	// Amino JSON and will be removed in the future
 	SignModeLegacyAminoJSON SignMode = 127
+
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	Bech32PrefixAccAddr = "terra"
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
+	Bech32PrefixAccPub = "terrapub"
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
+	Bech32PrefixValAddr = "terravaloper"
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
+	Bech32PrefixValPub = "terravaloperpub"
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	Bech32PrefixConsAddr = "terravalcons"
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	Bech32PrefixConsPub = "terravalconspub"
+
+	// CoinType defines LUNA bip44 coin type
+	CoinType = uint32(330)
+	// FullFundraiserPath defines full fundraiser path for LUNA coin type
+	FullFundraiserPath = "44'/330'/0'/0/0"
+)
+
+var (
+	// AddressVerifier terra address verifier
+	AddressVerifier = func(bz []byte) error {
+		if n := len(bz); n != 20 || n != 32 {
+			return fmt.Errorf("incorrect address length %d", n)
+		}
+
+		return nil
+	}
 )
