@@ -18,18 +18,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// QueryAccountResData response
-type QueryAccountResData struct {
-	Address       msg.AccAddress `json:"address"`
-	AccountNumber msg.Int        `json:"account_number"`
-	Sequence      msg.Int        `json:"sequence"`
-}
-
-// QueryAccountRes response
-type QueryAccountRes struct {
-	Account QueryAccountResData `json:"account"`
-}
-
 // LoadAccount simulates gas and fee for a transaction
 func (lcd LCDClient) LoadAccount(ctx context.Context, address msg.AccAddress) (res authtypes.AccountI, err error) {
 	resp, err := ctxhttp.Get(ctx, lcd.c, lcd.URL+fmt.Sprintf("/cosmos/auth/v1beta1/accounts/%s", address))
@@ -105,12 +93,4 @@ func (lcd LCDClient) Simulate(ctx context.Context, txbuilder tx.Builder, options
 	}
 
 	return &response, nil
-}
-
-// protoTxProvider is a type which can provide a proto transaction. It is a
-// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
-// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field.
-type protoTxProvider interface {
-	GetProtoTx() *sdktx.Tx
 }
