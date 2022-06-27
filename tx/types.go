@@ -73,7 +73,7 @@ var (
 	// AddressVerifier terra address verifier
 	AddressVerifier = func(bz []byte) error {
 		if n := len(bz); n != 20 && n != 32 {
-			return fmt.Errorf("incorrect address lengthhahaha %d", n)
+			return fmt.Errorf("incorrect address length %d", n)
 		}
 
 		return nil
