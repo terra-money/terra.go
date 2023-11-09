@@ -13,14 +13,14 @@ import (
 )
 
 func Test_Transaction(t *testing.T) {
-	mnemonic := "essence gallery exit illegal nasty luxury sport trouble measure benefit busy almost bulb fat shed today produce glide meadow require impact fruit omit weasel"
+	mnemonic := "satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn"
 	privKeyBz, err := key.DerivePrivKeyBz(mnemonic, key.CreateHDPath(0, 0))
 	assert.NoError(t, err)
 	privKey, err := key.PrivKeyGen(privKeyBz)
 	assert.NoError(t, err)
 
 	addr := msg.AccAddress(privKey.PubKey().Address())
-	assert.Equal(t, addr.String(), "terra1cevwjzwft3pjuf5nc32d9kyrvh5y7fp9havw7k")
+	assert.Equal(t, addr.String(), "terra1dcegyrekltswvyy0xy69ydgxn9x8x32zdtapd8")
 
 	toAddr, err := msg.AccAddressFromBech32("terra1t849fxw7e8ney35mxemh4h3ayea4zf77dslwna")
 	assert.NoError(t, err)
@@ -28,7 +28,7 @@ func Test_Transaction(t *testing.T) {
 	LCDClient := NewLCDClient(
 		"http://127.0.0.1:1317",
 		"testnet",
-		msg.NewDecCoinFromDec("uusd", msg.NewDecFromIntWithPrec(msg.NewInt(15), 2)), // 0.15uusd
+		msg.NewDecCoinFromDec("uluna", msg.NewDecFromIntWithPrec(msg.NewInt(15), 2)), // 0.15uluna
 		msg.NewDecFromIntWithPrec(msg.NewInt(15), 1), privKey,
 		10*time.Second,
 	)
@@ -37,8 +37,7 @@ func Test_Transaction(t *testing.T) {
 		context.Background(),
 		CreateTxOptions{
 			Msgs: []msg.Msg{
-				msg.NewMsgSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uusd", 100000000))), // 100UST
-				msg.NewMsgSwapSend(addr, toAddr, msg.NewInt64Coin("uusd", 1000000), "ukrw"),
+				msg.NewMsgSend(addr, toAddr, msg.NewCoins(msg.NewInt64Coin("uluna", 1000000))), // 1Luna
 			},
 			Memo:     "",
 			SignMode: tx.SignModeDirect,

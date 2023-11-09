@@ -16,21 +16,7 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	customauthtx "github.com/terra-money/core/custom/auth/tx"
 )
-
-// QueryAccountResData response
-type QueryAccountResData struct {
-	Address       msg.AccAddress `json:"address"`
-	AccountNumber msg.Int        `json:"account_number"`
-	Sequence      msg.Int        `json:"sequence"`
-}
-
-// QueryAccountRes response
-type QueryAccountRes struct {
-	Account QueryAccountResData `json:"account"`
-}
 
 // LoadAccount simulates gas and fee for a transaction
 func (lcd LCDClient) LoadAccount(ctx context.Context, address msg.AccAddress) (res authtypes.AccountI, err error) {
@@ -101,49 +87,6 @@ func (lcd LCDClient) Simulate(ctx context.Context, txbuilder tx.Builder, options
 	}
 
 	var response sdktx.SimulateResponse
-	err = lcd.EncodingConfig.Marshaler.UnmarshalJSON(out, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-// protoTxProvider is a type which can provide a proto transaction. It is a
-// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
-// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field.
-type protoTxProvider interface {
-	GetProtoTx() *sdktx.Tx
-}
-
-// ComputeTax compute tax
-func (lcd LCDClient) ComputeTax(ctx context.Context, txbuilder tx.Builder) (*customauthtx.ComputeTaxResponse, error) {
-	protoProvider := txbuilder.TxBuilder.(protoTxProvider)
-	protoTx := protoProvider.GetProtoTx()
-	reqBytes, err := lcd.EncodingConfig.Marshaler.MarshalJSON(&customauthtx.ComputeTaxRequest{
-		Tx: protoTx,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := ctxhttp.Post(ctx, lcd.c, lcd.URL+"/terra/tx/v1beta1/compute_tax", "application/json", bytes.NewBuffer(reqBytes))
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to estimate")
-	}
-	defer resp.Body.Close()
-
-	out, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to read response")
-	}
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("non-200 response code %d: %s", resp.StatusCode, string(out))
-	}
-
-	var response customauthtx.ComputeTaxResponse
 	err = lcd.EncodingConfig.Marshaler.UnmarshalJSON(out, &response)
 	if err != nil {
 		return nil, err

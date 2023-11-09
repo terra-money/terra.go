@@ -8,19 +8,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	core "github.com/terra-money/core/types"
-
 	"github.com/terra-money/terra.go/key"
 )
 
 func init() {
 	sdkConfig := sdk.GetConfig()
-	sdkConfig.SetCoinType(core.CoinType)
-	sdkConfig.SetFullFundraiserPath(core.FullFundraiserPath)
-	sdkConfig.SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)
-	sdkConfig.SetBech32PrefixForValidator(core.Bech32PrefixValAddr, core.Bech32PrefixValPub)
-	sdkConfig.SetBech32PrefixForConsensusNode(core.Bech32PrefixConsAddr, core.Bech32PrefixConsPub)
-	sdkConfig.SetAddressVerifier(core.AddressVerifier)
+	sdkConfig.SetCoinType(CoinType)
+	sdkConfig.SetFullFundraiserPath(FullFundraiserPath)
+	sdkConfig.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
+	sdkConfig.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
+	sdkConfig.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
+	sdkConfig.SetAddressVerifier(AddressVerifier)
 	sdkConfig.Seal()
 }
 

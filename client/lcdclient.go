@@ -11,8 +11,8 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	terraapp "github.com/terra-money/core/app"
-	terraappparams "github.com/terra-money/core/app/params"
+	terraapp "github.com/terra-money/core/v2/app"
+	terraappparams "github.com/terra-money/core/v2/app/params"
 )
 
 // LCDClient outer interface for building & signing & broadcasting tx
@@ -89,18 +89,13 @@ func (lcd *LCDClient) CreateAndSignTx(ctx context.Context, options CreateTxOptio
 			return nil, sdkerrors.Wrap(err, "failed to simulate")
 		}
 
-		gasLimit = lcd.GasAdjustment.MulInt64(int64(simulateRes.GasInfo.GasUsed)).TruncateInt64()
+		gasLimit = lcd.GasAdjustment.MulInt64(int64(simulateRes.GasInfo.GasUsed)).Ceil().RoundInt64()
 		txbuilder.SetGasLimit(uint64(gasLimit))
 	}
 
 	if options.FeeAmount.IsZero() {
-		computeTaxRes, err := lcd.ComputeTax(ctx, txbuilder)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "failed to compute tax")
-		}
-
-		gasFee := msg.NewCoin(lcd.GasPrice.Denom, lcd.GasPrice.Amount.MulInt64(gasLimit).TruncateInt())
-		txbuilder.SetFeeAmount(computeTaxRes.TaxAmount.Add(gasFee))
+		gasFee := msg.NewCoin(lcd.GasPrice.Denom, lcd.GasPrice.Amount.MulInt64(gasLimit).Ceil().RoundInt())
+		txbuilder.SetFeeAmount(msg.NewCoins(gasFee))
 	}
 
 	err := txbuilder.Sign(options.SignMode, tx.SignerData{
